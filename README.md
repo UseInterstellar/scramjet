@@ -4,7 +4,7 @@
 </div>
 
 <div align="center">
-  <a href="https://www.npmjs.com/package/@mercuryworkshop/scramjet"><img src="https://img.shields.io/npm/v/@mercuryworkshop/scramjet.svg?maxAge=3600" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@useinterstellar/scramjet"><img src="https://img.shields.io/npm/v/@useinterstellar/scramjet.svg?maxAge=3600" alt="npm version" /></a>
   <img src="https://img.shields.io/github/issues/MercuryWorkshop/scramjet?style=flat&color=orange" />
   <img src="https://img.shields.io/github/stars/MercuryWorkshop/scramjet?style=flat&color=orange" />
 </div>

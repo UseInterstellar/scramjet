@@ -1,12 +1,12 @@
 {
-	"name": "@mercuryworkshop/scramjet",
-	"version": "1.1.0",
+	"name": "@useinterstellar/scramjet",
+	"version": "1.1.0-fixed",
 	"description": "An experimental web proxy that aims to be the successor to Ultraviolet",
 	"type": "module",
 	"types": "./dist/types/index.d.ts",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/MercuryWorkshop/scramjet.git"
+		"url": "git+https://github.com/UseInterstellar/scramjet.git"
 	},
 	"scripts": {
 		"build": "rspack build --mode production",
@@ -16,15 +16,16 @@
 		"dev": "node server.js",
 		"dev:debug": "DEBUG=1 node server.js",
 		"prepack": "RELEASE=1 npm run rewriter:build && npm run build:all",
-		"pub": "npm publish --no-git-checks --access public",
 		"format": "prettier --write .",
 		"format:docs": "remark \"docs/**/*.{md,mdx}\" --output",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix",
 		"lint:workflows": "actionlint .github/workflows/*.yml",
 		"lint:all": "npm run lint && npm run lint:workflows",
-		"test": "npm run test:package && npm run test:integration",
+		"test": "npm run test:rewriter && npm run test:package && npm run test:frame",
 		"test:package": "ava tests/ci/packageValidation.js",
+		"test:frame": "ava tests/ci/frameAncestors.js",
+		"test:rewriter": "cd rewriter/native && cargo test",
 		"test:integration": "npx playwright test",
 		"preinstall": "npx only-allow pnpm",
 		"docs": "typedoc",
@@ -49,6 +50,9 @@
 		"dist",
 		"lib"
 	],
+	"publishConfig": {
+		"access": "public"
+	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",

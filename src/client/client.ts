@@ -362,6 +362,9 @@ export class ScramjetClient {
 			let currentwin = this.global.window;
 			while (currentwin.parent !== currentwin) {
 				let currentclient = currentwin[SCRAMJETCLIENT];
+				// an ancestor that isn't running a scramjet client (e.g. a host page that nests the
+				// proxied frame inside its own iframes) has no descriptors to consult
+				if (!currentclient) return null;
 				let currentFrame = currentclient.descriptors.get(
 					"window.frameElement",
 					currentwin

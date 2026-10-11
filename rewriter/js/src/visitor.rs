@@ -428,6 +428,7 @@ where
 			}
 		}
 		walk::walk_expression(self, &right);
+		walk::walk_statement(self, body);
 	}
 
 	fn scramitize(&mut self, span: Span) {
@@ -718,12 +719,23 @@ where
 		if let Some(t) = &it.update {
 			walk::walk_expression(self, t);
 		}
+
+		walk::walk_statement(self, &it.body);
 	}
 
 	fn visit_for_of_statement(&mut self, it: &oxc::ast::ast::ForOfStatement<'data>) {
+		// without destructure rewrites there is nothing special to do, and handle_for_of_in never walks the body
+		if !self.flags.destructure_rewrites {
+			walk::walk_for_of_statement(self, it);
+			return;
+		}
     	self.handle_for_of_in(&it.left, &it.right, &it.body);
 	}
 	fn visit_for_in_statement(&mut self, it: &oxc::ast::ast::ForInStatement<'data>) {
+		if !self.flags.destructure_rewrites {
+			walk::walk_for_in_statement(self, it);
+			return;
+		}
     	self.handle_for_of_in(&it.left, &it.right, &it.body);
 	}
 

@@ -151,4 +151,37 @@ function check(val) {
 			rewriter.reset();
 		}
 	}
+
+	#[test]
+	fn loop_bodies_rewrite_imports() {
+		// import() and import.meta inside for...of / for...in bodies used to stay raw, which resolved
+		// against the real module url (broke Vite style preload helpers)
+		let source = r#"
+for (const dep of deps) { import("./a.js"); void import.meta.url; }
+for (const k in deps) { import("./b.js"); void import.meta.url; }
+async function f() { for await (const d of deps) { await import("./c.js"); void import.meta.url; } }
+for (const a of deps) for (const b of deps) { import("./d.js"); void import.meta.url; }
+for (let i = 0; i < 1; i++) { import("./e.js"); void import.meta.url; }
+"#;
+
+		for destructure_rewrites in [true, false] {
+			let opts = crate::RewriterOptions {
+				importfn: String::from("$import"),
+				metafn: String::from("$meta"),
+				is_module: true,
+				destructure_rewrites,
+				base: String::from("https://example.com/x/y.js"),
+				..crate::RewriterOptions::default()
+			};
+			let mut rewriter = NativeRewriter::new(&opts);
+			let out = rewriter.rewrite(source, &opts).unwrap();
+			let js = std::str::from_utf8(&out.js).unwrap();
+
+			// every import( is the argument of $import(, every import.meta is wrapped by $meta(
+			assert_eq!(js.matches("import(").count(), js.matches("$import(").count(), "raw import() left: {js}");
+			assert_eq!(js.matches("$import(").count(), 5, "{js}");
+			assert_eq!(js.matches("$meta(import.meta").count(), 5, "{js}");
+			assert_eq!(js.matches("import.meta").count(), 5, "raw import.meta left: {js}");
+		}
+	}
 }

@@ -6,7 +6,7 @@
 
 import test from "ava";
 import { glob } from "glob";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 /**
  * Expected distribution files for Scramjet's bundles.
@@ -112,4 +112,44 @@ test("Package structure is valid for distribution", async (t) => {
 	t.true(hasJsFiles, "Distribution should contain JS files");
 	t.true(hasWasmFile, "Distribution should contain WASM file");
 	t.true(hasTypeFiles, "Library should contain core type definition files");
+});
+
+/**
+ * Validates that the packaged rewriter is a release build.
+ * A debug build (RELEASE unset) keeps the wasm `name` custom section, the release pipeline strips it.
+ * @param {import("ava").ExecutionContext} t - AVA unit test context.
+ */
+test("Rewriter WASM is a release build", (t) => {
+	const wasm = readFileSync("dist/scramjet.wasm.wasm");
+	t.is(wasm.subarray(0, 4).toString("latin1"), "\0asm", "not a wasm module");
+
+	let pos = 8;
+	const readLeb = () => {
+		let result = 0;
+		let shift = 0;
+		let byte;
+		do {
+			byte = wasm[pos++];
+			result |= (byte & 0x7f) << shift;
+			shift += 7;
+		} while (byte & 0x80);
+		return result;
+	};
+
+	const customSections = [];
+	while (pos < wasm.length) {
+		const id = wasm[pos++];
+		const size = readLeb();
+		const end = pos + size;
+		if (id === 0) {
+			const nameLength = readLeb();
+			customSections.push(wasm.subarray(pos, pos + nameLength).toString());
+		}
+		pos = end;
+	}
+
+	t.false(
+		customSections.includes("name"),
+		`debug name section present (custom sections: ${customSections.join(", ")})`
+	);
 });
