@@ -140,7 +140,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
 
       - uses: actions/download-artifact@v4
         with:
@@ -150,7 +149,11 @@ jobs:
       - name: Check the artifact is the one that was tested
         run: echo "${{ needs.build.outputs.sha256 }}  $(ls useinterstellar-scramjet-*.tgz)" | sha256sum -c -
 
+      # prerelease versions need an explicit dist-tag. The token goes in a throwaway .npmrc rather than via
+      # setup-node's registry-url, which also writes the obsolete always-auth setting.
       - name: Publish
-        run: npm publish useinterstellar-scramjet-*.tgz --access public
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > "$RUNNER_TEMP/npmrc"
+          npm publish useinterstellar-scramjet-*.tgz --access public --tag fixed --userconfig "$RUNNER_TEMP/npmrc"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
